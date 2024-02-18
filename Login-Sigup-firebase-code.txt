@@ -1,0 +1,102 @@
+    // Sigunp code 
+      import auth from '@react-native-firebase/auth';
+     const handleSignUp = async () => {
+    if (validate()) {
+      await auth().createUserWithEmailAndPassword(email, password);
+      db.collection('Users')
+        .add({
+          username,
+          email,
+          password,
+        })
+        .then(() => {
+          console.log('User added!');
+        });
+      await auth()
+        .currentUser?.updateProfile({
+          displayName: username,
+        })
+        .then(() => {
+          Alert.alert('User account created & signed in!');
+        })
+
+        .catch(error => {
+          if (error.code === 'auth/email-already-in-use') {
+            Alert.alert('That email address is already in use!');
+          }
+
+          if (error.code === 'auth/invalid-email') {
+            Alert.alert('That email address is invalid!');
+          }
+
+          console.error(error);
+        });
+    }
+  };
+
+
+           // Google sigup code 
+                      
+          first step google webclient id add 
+           import files
+           import {GoogleSignin} from '@react-native-google-signin/google-signin';
+              GoogleSignin.configure({
+              webClientId:
+              '753257465557-kl0kd9ng0anhf8u9rnhf3cq4qsgr0ra6.apps.googleusercontent.com',
+                 }); 
+
+             const onGoogleButtonPress = async () => {
+            await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+           const {idToken} = await GoogleSignin.signIn();
+           const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+          const user_sign = auth().signInWithCredential(googleCredential);
+          user_sign.then(user => {
+         db.collection('Users').add({
+         displayName: String,
+        email,
+        password,
+        });
+       console.log(user);
+       });
+       }; 
+
+
+            // Login
+              
+               const handleLogin = () => {
+           if (validate()) {
+          auth()
+        .signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log('User signed in:', user);
+          props.navigation.navigate('Home');
+        })
+        .catch(error => {
+          if (error.code === 'auth/user-not-found') {
+          } else {
+            Alert.alert('Create account');
+          }
+        });
+       }
+     };
+    
+        //Google Login 
+
+         const googlelogout = async () => {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        await GoogleSignin.signOut();
+        const { idToken } = await GoogleSignin.signIn();
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+        const user_sign = auth().signInWithCredential(googleCredential);
+        user_sign
+ 
+       .then((user) => {
+      props.navigation.navigate('Home');
+      })
+       .catch((error) => {
+        console.log(error);
+        });
+         };
+
+                  

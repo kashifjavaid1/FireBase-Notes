@@ -1,0 +1,77 @@
+ const [image, setImage] = useState<string | null>(null);
+
+  const pickImageAndUpload = async () => {
+    const options: ImageLibraryOptions = {quality: 0.5, mediaType: 'mixed'};
+    launchImageLibrary(options, handleImageSelection);
+  };
+
+  const handleImageSelection = async (fileobj: ImagePickerResponse) => {
+    if (fileobj.assets && fileobj.assets.length > 0) {
+      const selectedAsset = fileobj.assets[0];
+      const uri: string = selectedAsset.uri ?? '';
+      const uploadTask = storage()
+        .ref()
+        .child(`/userprofile/${Date.now()}`)
+        .putFile(uri);
+
+      uploadTask.on(
+        'state_changed',
+        snapshot => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          if (progress === 100) Alert.alert('uploaded');
+        },
+        error => {
+          Alert.alert('Error uploading image');
+        },
+        async () => {
+          try {
+            const downloadURL = await uploadTask.snapshot?.ref.getDownloadURL();
+            if (downloadURL) {
+              setImage(downloadURL);
+              console.log(downloadURL);
+              const user = auth().currentUser;
+              if (user) {
+                const userId = user.uid;
+                const userName = user.displayName || '';
+                const mediaType =
+                  selectedAsset.type && selectedAsset.type.startsWith('video')
+                    ? 'video'
+                    : 'image';
+                db.collection('Images').add({
+                  downloadURL,
+                  userName,
+                  userId,
+                  createdAt: new Date(),
+                  mediaType,
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error getting download URL', error);
+          }
+        },
+      );
+    } else {
+      Alert.alert('Not selected');
+    }
+  };
+
+
+   // get images firestore
+
+     const fetchUsers = async () => {
+    try {
+      const responce = await db.collection('Images').get();
+
+      const fetchData = responce.docs.map(doc => doc.data());
+      setData(fetchData);
+      console.log(fetchData);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);

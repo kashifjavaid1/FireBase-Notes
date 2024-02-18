@@ -1,0 +1,67 @@
+import {useState, useEffect} from 'react';
+import {db} from '../../config/Firebase';
+import auth from '@react-native-firebase/auth';
+
+export function useProfile() {
+  const [data, setData] = useState<any>([]);
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const currentUser = auth().currentUser;
+        if (!currentUser) {
+          return;
+        }
+        const userId = currentUser.uid;
+        const response = await db
+          .collection('Images')
+          .where('userId', '==', userId)
+          .get();
+        const userData = response.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setData(userData);
+      } catch (error) {
+        console.error('Error fetching user images:', error);
+      }
+    };
+
+    fetchImages();
+  }, []);
+
+  return {data};
+}   
+
+
+    // get image and video by id
+
+
+    <View>
+          <FlatList
+            data={data}
+            numColumns={3}
+            keyExtractor={item => item.id}
+            renderItem={({item}) => (
+              <>
+                {item.downloadURL && item.mediaType !== 'video' && (
+                  <Image
+                    source={{uri: item.downloadURL}}
+                    style={{
+                      width: 124,
+                      height: 124,
+                    }}
+                  />
+                )}
+                {item.downloadURL && item.mediaType === 'video' && (
+                  <Video
+                    source={{uri: item.downloadURL}}
+                    style={{
+                      width: 124,
+                      height: 124,
+                    }}
+                  />
+                )}
+              </>
+            )}
+          />
+        </View>
